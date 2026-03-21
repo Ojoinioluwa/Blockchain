@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-03-08T13:33:26.547Z",
+  "event": "TRANSACTION_SETTLED",
+  "level": "INFO",
+  "txHash": "0xbdc9717b6ec2c65fdd12b4c2c635b3cc518fc5685bfcbad0732ffaeb3e7e2705",
+  "from": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+  "to": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+  "value": "0.0001"
+}

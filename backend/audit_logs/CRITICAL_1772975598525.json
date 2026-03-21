@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-08T13:13:18.525Z",
+  "event": "TRANSACTION_FAILED",
+  "level": "CRITICAL",
+  "fromAddress": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+  "toAddress": "0xYourFriendAddress",
+  "error": "unconfigured name (value=\"0xYourFriendAddress\", code=UNCONFIGURED_NAME, version=6.16.0)"
+}

@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-03-08T13:20:27.344Z",
+  "event": "USER_ONBOARDING_APPROVED",
+  "level": "INFO",
+  "fullName": "System Admin",
+  "userAddress": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+  "country": "Nigeria",
+  "riskScore": 0
+}

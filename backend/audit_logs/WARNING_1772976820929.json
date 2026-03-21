@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-03-08T13:33:40.929Z",
+  "event": "SAR_GENERATED",
+  "level": "WARNING",
+  "sender": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+  "receiver": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+  "amount": "0.0001",
+  "reason": "High Velocity: Potential Structuring (Smurfing) detected.",
+  "stats": {
+    "count": 7,
+    "total": 0.0007000000000000001
+  }
+}

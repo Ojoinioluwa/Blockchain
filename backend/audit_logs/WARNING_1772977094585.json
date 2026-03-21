@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-03-08T13:38:14.585Z",
+  "event": "SAR_GENERATED",
+  "level": "WARNING",
+  "sender": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+  "receiver": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+  "amount": "0.001",
+  "reason": "High Value: Transaction exceeds risk threshold (0.01 ETH).",
+  "stats": {
+    "count": 1,
+    "total": 0.001
+  }
+}

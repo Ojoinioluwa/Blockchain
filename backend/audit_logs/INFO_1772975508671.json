@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-03-08T13:11:48.671Z",
+  "event": "USER_ONBOARDING_APPROVED",
+  "level": "INFO",
+  "fullName": "Inioluwa",
+  "userAddress": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+  "country": "Nigeria",
+  "riskScore": 0
+}
