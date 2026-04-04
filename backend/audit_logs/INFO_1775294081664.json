@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-04T09:14:41.664Z",
+  "event": "TRANSACTION_SETTLED",
+  "level": "INFO",
+  "sender": "SYSTEM",
+  "receiver": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+  "amount": "0.01",
+  "reason": null,
+  "metadata": {
+    "txHash": "0xbfb9c7e226e8c27aa3ceb1b63a2fc95b7ff319b2e6cb85513691bf4b8a1f36e3",
+    "toAddress": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+    "amount": 0.01
+  }
+}

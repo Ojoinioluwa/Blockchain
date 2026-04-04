@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-04T10:46:19.274Z",
+  "event": "VELOCITY_BLOCK",
+  "level": "CRITICAL",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": "Potential Structuring/Smurfing Activity detected",
+  "metadata": {
+    "projectedTotal": 1.15,
+    "limit": 0.5,
+    "reason": "Potential Structuring/Smurfing Activity detected"
+  }
+}

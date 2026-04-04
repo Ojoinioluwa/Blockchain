@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { getLogs } from "../services/amlService";
+import { getAuditLogs } from "../services/amlService";
 
 export const useLogs = () => {
     const [logs, setLogs] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await getLogs();
+            const data = await getAuditLogs();
             setLogs(data);
         };
 

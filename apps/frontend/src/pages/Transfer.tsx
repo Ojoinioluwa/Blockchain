@@ -1,284 +1,291 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
-  TrendingUp,
-  ShieldAlert,
-  Activity,
-  Zap,
-  BarChart3,
-  ShieldCheck,
   Send,
   Wallet,
-  ArrowRight,
+  ArrowRightLeft,
+  ShieldCheck,
+  AlertTriangle,
   Loader2,
+  Coins,
+  History,
+  Globe,
 } from "lucide-react";
-import StatCard from "../components/StatCard";
-import { useLogs } from "../hooks/useLogs";
-import { transferFunds } from "../services/amlService";
+// Added useTransfer to your imports
+import { useAuditLogs, useBlacklist, useTransfer } from "../hooks/useSentinel";
 
-/**
- * Overview Component
- * The central intelligence hub for the Sentinel AML Platform.
- * Displays real-time protocol health, transaction volume, and security alerts.
- * Now includes an integrated, high-fidelity Transfer Portal for compliant fund movement.
- */
+const TransferPage = () => {
+  const [form, setForm] = useState({
+    recipient: "",
+    amount: "",
+    asset: "ETH",
+  });
 
-const Overview = () => {
-  const logs = useLogs();
-  const [form, setForm] = useState({ from: "", to: "", amount: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [txStatus, setTxStatus] = useState<"idle" | "success" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "review" | "success" | "denied" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const { totalVolume, alerts, healthScore } = useMemo(() => {
-    const volume = logs
-      .filter((l: any) => l.event === "TRANSACTION_SETTLED")
-      .reduce(
-        (acc: number, curr: any) => acc + parseFloat(curr.amount || "0"),
-        0,
-      );
+  // 1. Hook Integration
+  const { data: logData } = useAuditLogs();
+  const { data: blacklistData } = useBlacklist();
+  const { mutateAsync: executeTransfer, isPending: isTransferring } =
+    useTransfer();
 
-    const alertCount = logs.filter(
-      (l: any) => l.level === "CRITICAL" || l.level === "WARNING",
-    ).length;
+  // 2. Security Logic: Blacklist Lookup
+  const blacklistedAddresses = useMemo(() => {
+    return new Set(
+      blacklistData?.data?.map((b: { address: string }) =>
+        b.address.toLowerCase(),
+      ) || [],
+    );
+  }, [blacklistData]);
 
-    const score = Math.max(0, 100 - alertCount * 15);
-    return { totalVolume: volume, alerts: alertCount, healthScore: score };
-  }, [logs]);
+  // 3. UI Logic: Recent Activity
+  const recentTransfers = useMemo(() => {
+    return (
+      logData?.data
+        ?.filter((l: { event: string }) => l.event === "TRANSACTION_SETTLED")
+        .slice(0, 4) || []
+    );
+  }, [logData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  console.log(recentTransfers);
+
+  const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setTxStatus("idle");
+    setStatus("idle");
+    setErrorMessage("");
+
+    const recipientClean = form.recipient.trim().toLowerCase();
+
+    // --- STAGE 1: SENTINEL AML CHECK (Client-Side) ---
+    if (blacklistedAddresses.has(recipientClean)) {
+      setStatus("denied");
+      return;
+    }
+
+    // --- STAGE 2: EXECUTE MUTATION (Server-Side) ---
     try {
-      await transferFunds(form);
-      setTxStatus("success");
-      setForm({ from: "", to: "", amount: "" });
-    } catch (err) {
-      setTxStatus("error");
-      console.log(err);
-    } finally {
-      setIsSubmitting(false);
+      await executeTransfer({
+        toAddress: form.recipient,
+        amountInEth: parseFloat(form.amount),
+        asset: form.asset,
+      });
+
+      setStatus("success");
+      setForm({ recipient: "", amount: "", asset: "ETH" }); // Reset form
+    } catch (err: any) {
+      setStatus("error");
+      setErrorMessage(
+        err.response?.data?.message ||
+          err.message ||
+          "Protocol transmission failure",
+      );
     }
   };
 
+  if (status === "success") {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center animate-in zoom-in duration-500">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-400 border border-emerald-500/20 shadow-[0_0_50px_rgba(16,185,129,0.15)]">
+            <ShieldCheck size={48} strokeWidth={1.5} />
+          </div>
+          <div className="absolute inset-0 rounded-full animate-ping bg-emerald-500/5 opacity-50" />
+        </div>
+        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
+          Transfer Confirmed
+        </h2>
+        <p className="text-slate-400 mt-3 font-medium text-center max-w-xs leading-relaxed">
+          The transaction has been broadcast to the network and verified by the
+          Sentinel node.
+        </p>
+        <button
+          onClick={() => setStatus("idle")}
+          className="mt-10 px-10 py-4 bg-slate-900 border border-white/5 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-800 transition-all"
+        >
+          New Transaction
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Intelligence Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-white tracking-tight">
-            System Overview
-          </h2>
-          <p className="text-slate-500 text-sm">
-            Global protocol activity and risk assessment metrics.
-          </p>
-        </div>
-        <div className="flex items-center gap-4 bg-slate-900/50 px-4 py-2 rounded-2xl border border-white/5">
-          <div className="flex flex-col items-end">
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-              Protocol Health
-            </span>
-            <span
-              className={`text-sm font-bold ${healthScore > 80 ? "text-emerald-400" : "text-amber-400"}`}
-            >
-              {healthScore}% Secure
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-full border-2 border-slate-800 flex items-center justify-center relative">
-            <div
-              className="absolute inset-0 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin-slow"
-              style={{ animationDuration: "3s" }}
-            />
-            <ShieldCheck size={18} className="text-emerald-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          label="Daily Volume"
-          value={`${totalVolume.toFixed(4)} ETH`}
-          icon={TrendingUp}
-          trend={12.5}
-          color="blue"
-          description={""}
-        />
-        <StatCard
-          label="Security Alerts"
-          value={alerts}
-          icon={ShieldAlert}
-          color="rose"
-          trend={0.7}
-          description={""}
-        />
-        <StatCard
-          label="Throughput"
-          value="1.2k tx/s"
-          icon={Zap}
-          color="emerald"
-          trend={0.7}
-          description={""}
-        />
-        <StatCard
-          label="Audited Nodes"
-          value="142"
-          icon={Activity}
-          color="purple"
-          trend={0.7}
-          description={""}
-        />
-      </div>
-
-      {/* Main Interface: Transfer & Volume Velocity */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Transfer Portal Section */}
-        <div className="lg:col-span-5 bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-5">
-            <Send size={120} />
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+      {/* --- LEFT: TRANSFER INTERFACE --- */}
+      <div className="lg:col-span-7 space-y-6">
+        <div className="bg-[#020617] border border-white/5 p-10 rounded-[3rem] shadow-3xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <Globe size={160} className="text-blue-500" />
           </div>
 
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2.5 bg-emerald-500/20 rounded-xl">
-              <Send size={20} className="text-emerald-400" />
+          <div className="flex items-center gap-5 mb-10 relative z-10">
+            <div className="p-4 bg-blue-600/10 rounded-3xl text-blue-400 border border-blue-500/10">
+              <Send size={24} />
             </div>
             <div>
-              <h3 className="text-white font-bold leading-none">
-                Transfer Portal
-              </h3>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">
-                Cross-Border Compliance
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                Protocol Transfer
+              </h2>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1 italic">
+                V2 Velocity Engine Active
               </p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                Origin Address
-              </label>
-              <div className="relative">
-                <Wallet
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"
-                  size={16}
-                />
-                <input
-                  type="text"
-                  placeholder="0x... (Sender)"
-                  className="w-full bg-[#0f172a] border border-slate-700 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-700"
-                  value={form.from}
-                  onChange={(e) => setForm({ ...form, from: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+          <form onSubmit={handleTransfer} className="space-y-8 relative z-10">
+            <div className="space-y-3">
+              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
                 Destination Address
               </label>
               <div className="relative">
-                <ArrowRight
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"
-                  size={16}
+                <Wallet
+                  className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600"
+                  size={20}
                 />
                 <input
-                  type="text"
-                  placeholder="0x... (Recipient)"
-                  className="w-full bg-[#0f172a] border border-slate-700 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-700"
-                  value={form.to}
-                  onChange={(e) => setForm({ ...form, to: e.target.value })}
                   required
+                  placeholder="0x..."
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm text-white focus:border-blue-500/40 outline-none font-mono"
+                  value={form.recipient}
+                  onChange={(e) =>
+                    setForm({ ...form, recipient: e.target.value })
+                  }
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                Asset Value (ETH)
-              </label>
-              <input
-                type="number"
-                step="0.0001"
-                placeholder="0.0000"
-                className="w-full bg-[#0f172a] border border-slate-700 rounded-2xl py-4 px-5 text-sm font-mono text-emerald-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-700"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-3 gap-6">
+              <div className="col-span-2 space-y-3">
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  Amount
+                </label>
+                <input
+                  title="Amount"
+                  required
+                  type="number"
+                  step="0.01"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-5 px-6 text-sm text-white focus:border-blue-500/40 outline-none font-mono"
+                  value={form.amount}
+                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  Asset
+                </label>
+                <select
+                  title="asset"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-5 px-6 text-sm text-white outline-none appearance-none font-bold"
+                  value={form.asset}
+                  onChange={(e) => setForm({ ...form, asset: e.target.value })}
+                >
+                  <option>ETH</option>
+                  <option>USDC</option>
+                </select>
+              </div>
             </div>
 
-            {txStatus === "success" && (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs flex items-center gap-3">
-                <ShieldCheck size={16} />
-                Protocol cleared: Transfer initiated on-chain.
+            {/* ERROR HANDLING: BLACKLIST */}
+            {status === "denied" && (
+              <div className="p-5 bg-rose-500/10 border border-rose-500/20 rounded-3xl flex items-start gap-4 text-rose-400 animate-in fade-in slide-in-from-top-2">
+                <AlertTriangle size={20} className="shrink-0 mt-1" />
+                <div className="text-[11px]">
+                  <p className="font-black uppercase tracking-widest mb-1">
+                    Sentinel Block: Blacklisted Address
+                  </p>
+                  <p>
+                    Transaction terminated. Destination address is flagged for
+                    high-risk activity.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ERROR HANDLING: API FAILURE */}
+            {status === "error" && (
+              <div className="p-5 bg-amber-500/10 border border-amber-500/20 rounded-3xl flex items-start gap-4 text-amber-400 animate-in fade-in slide-in-from-top-2">
+                <AlertTriangle size={20} className="shrink-0 mt-1" />
+                <div className="text-[11px]">
+                  <p className="font-black uppercase tracking-widest mb-1">
+                    Execution Failure
+                  </p>
+                  <p>{errorMessage}</p>
+                </div>
               </div>
             )}
 
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full group relative flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-emerald-900/20"
+              disabled={isTransferring}
+              className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-4"
             >
-              {isSubmitting ? (
+              {isTransferring ? (
                 <>
-                  <Loader2 className="animate-spin" size={16} />
-                  Auditing Transaction...
+                  <Loader2 className="animate-spin" size={20} />
+                  Broadcasting to Node...
                 </>
               ) : (
                 <>
-                  <ShieldCheck size={16} />
-                  Execute Validated Send
+                  Confirm & Execute
+                  <ArrowRightLeft size={18} />
                 </>
               )}
             </button>
           </form>
         </div>
+      </div>
 
-        {/* Volume Velocity Graph (Selected Code Context) */}
-        <div className="lg:col-span-7 space-y-8">
-          <div className="bg-[#020617]/60 border border-slate-800 p-8 rounded-[2.5rem] min-h-75 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-8">
-              <h4 className="font-bold text-white flex items-center gap-2">
-                <BarChart3 size={18} className="text-blue-400" />
-                Volume Velocity
-              </h4>
-              <div className="flex gap-2">
-                {["1H", "6H", "24H", "7D"].map((t) => (
-                  <button
-                    key={t}
-                    className={`text-[10px] font-black px-3 py-1 rounded-lg border border-slate-800 ${t === "24H" ? "bg-blue-500 text-white border-blue-500" : "text-slate-500"}`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1 flex items-end gap-2 px-2">
-              {[40, 70, 45, 90, 65, 80, 55, 75, 60, 85, 95, 100].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 bg-linear-to-t from-blue-600/20 to-blue-400/40 rounded-t-sm transition-all duration-1000 hover:to-blue-400"
-                  style={{ height: `${h}%`, animationDelay: `${i * 0.05}s` }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/20 border border-dashed border-slate-800 p-8 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mb-4 text-slate-500">
-              <Activity size={32} />
-            </div>
-            <h4 className="text-white font-bold mb-2">Live Node Feed</h4>
-            <p className="text-slate-500 text-xs leading-relaxed mb-6">
-              Real-time validation of cross-border liquidity pools and
-              sanctioned address filters.
+      {/* --- RIGHT: SIDEBAR --- */}
+      <div className="lg:col-span-5 space-y-8">
+        <div className="p-8 bg-linear-to-br from-indigo-700 to-blue-900 rounded-[2.5rem] text-white shadow-3xl relative overflow-hidden">
+          <div className="relative z-10">
+            <ShieldCheck size={32} className="mb-4 opacity-80" />
+            <h3 className="font-black uppercase tracking-tighter text-xl italic">
+              Compliance Guard
+            </h3>
+            <p className="text-blue-100/70 text-[11px] leading-loose mt-4 font-bold uppercase tracking-widest">
+              Live Address Screening against FATF & OFAC databases.
             </p>
-            <button className="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors">
-              View Intelligence Map
-            </button>
+          </div>
+          <Coins className="absolute -bottom-8 -right-8 text-white/10 w-48 h-48 rotate-12" />
+        </div>
+
+        {/* Real-time History */}
+        <div className="bg-[#020617] border border-white/5 rounded-[2.5rem] p-8 shadow-xl">
+          <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+            <History size={16} className="text-blue-500" />
+            Audit Log Preview
+          </h4>
+
+          <div className="space-y-4">
+            {recentTransfers.map(
+              (log: {
+                amount: number;
+                receiver: string;
+                _id: string;
+                asset: string;
+              }) => (
+                <div
+                  key={log._id}
+                  className="p-5 bg-slate-900/40 rounded-2xl border border-white/5 flex justify-between items-center group"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
+                      {log.receiver.slice(0, 16)}..
+                    </span>
+                    <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-tighter flex items-center gap-1">
+                      <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />{" "}
+                      Compliant
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-black text-white">
+                      {log.amount} {log.asset || "ETH"}
+                    </p>
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </div>
@@ -286,4 +293,4 @@ const Overview = () => {
   );
 };
 
-export default Overview;
+export default TransferPage;

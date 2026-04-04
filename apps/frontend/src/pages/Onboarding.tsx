@@ -8,191 +8,262 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
-import { registerUser } from "../services/amlService";
-
-/**
- * Onboarding Component
- * High-fidelity KYC registration interface for the Sentinel AML Platform.
- * * Features:
- * - Real-time validation styling
- * - Integrated loading states for blockchain interaction
- * - Premium dark-mode aesthetics
- */
-
-// Mock service call - replace with your actual service import
+// 1. Import the Sentinel hooks
+import { useRegisterUser, useSanctions } from "../hooks/useSentinel";
 
 const Onboarding = () => {
   const [form, setForm] = useState({
-    address: "",
-    name: "",
+    userAddress: "",
+    fullName: "",
+    email: "",
+    idNumber: "",
     country: "",
   });
+
   const [status, setStatus] = useState<
-    "idle" | "submitting" | "success" | "error"
+    "idle" | "success" | "pending" | "error"
   >("idle");
   const [message, setMessage] = useState("");
+  const [txHash, setTxHash] = useState("");
+
+  // 2. Initialize the Onboarding Mutation
+  const onboardMutation = useRegisterUser();
+
+  // 3. Fetch real-time Sanctions for the dropdown
+  const { data: sanctionsData } = useSanctions();
+  const sanctionedCountries = sanctionsData?.data || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("submitting");
-    try {
-      await registerUser(form);
-      setStatus("success");
-      setMessage("User successfully whitelisted on-chain.");
-    } catch (err) {
-      setStatus("error");
-      console.log(err);
-      setMessage("Registration failed. Please verify credentials.");
-    }
+    setMessage("");
+
+    // 4. Execute mutation
+    onboardMutation.mutate(form, {
+      onSuccess: (data) => {
+        // Handle the logic based on your AML Controller responses
+        if (data.status === "SUCCESS") {
+          setStatus("success");
+          setTxHash(data.txHash);
+          setMessage(
+            "Entity successfully whitelisted on-chain and registered in Sentinel DB.",
+          );
+        } else if (data.riskScore >= 70) {
+          setStatus("pending");
+          setMessage(
+            `High Risk Detected (${data.riskScore}). Reasons: ${data.reasons?.join(", ")}`,
+          );
+        }
+      },
+      onError: (error: any) => {
+        setStatus("error");
+        // Pull the error message from the backend (e.g., "Address is Blacklisted")
+        setMessage(
+          error.response?.data?.message ||
+            "Onboarding rejected by security protocol.",
+        );
+      },
+    });
   };
 
+  // Success State View
   if (status === "success") {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
-        <div className="bg-emerald-500/10 p-6 rounded-full mb-6">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 text-center px-6">
+        <div className="bg-emerald-500/10 p-6 rounded-full mb-6 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
           <CheckCircle2 size={64} className="text-emerald-400" />
         </div>
-        <h2 className="text-3xl font-black text-white mb-2">
-          Onboarding Complete
+        <h2 className="text-3xl font-black text-white mb-2 tracking-tight uppercase">
+          Access Granted
         </h2>
-        <p className="text-slate-400 mb-8">{message}</p>
+        <p className="text-slate-400 max-w-md mb-6">{message}</p>
+
+        {txHash && (
+          <div className="mb-8 p-4 bg-slate-950 border border-white/5 rounded-2xl w-full max-w-sm shadow-inner">
+            <p className="text-[10px] text-slate-500 uppercase font-black mb-2 tracking-widest">
+              On-Chain Evidence
+            </p>
+            <code className="text-blue-400 text-[10px] font-mono break-all leading-tight">
+              {txHash}
+            </code>
+          </div>
+        )}
+
         <button
-          onClick={() => setStatus("idle")}
-          className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all"
+          onClick={() => {
+            setStatus("idle");
+            setForm({
+              userAddress: "",
+              fullName: "",
+              email: "",
+              idNumber: "",
+              country: "",
+            });
+          }}
+          className="px-10 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all border border-white/10"
         >
-          Register Another User
+          Initialize New Session
         </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="max-w-2xl mx-auto w-full py-12 px-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="mb-10 text-center md:text-left">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest mb-4">
           <ShieldCheck size={12} />
-          Compliance Layer
+          Compliance Node Active
         </div>
-        <h1 className="text-4xl font-black text-white tracking-tight mb-3">
-          KYC Onboarding
+        <h1 className="text-4xl font-black text-white tracking-tight mb-3 uppercase">
+          Entity Onboarding
         </h1>
-        <p className="text-slate-400 leading-relaxed">
-          Initialize a new entity within the Sentinel protocol. This process
-          verifies credentials against global sanction lists and updates the
-          on-chain whitelist.
+        <p className="text-slate-400 leading-relaxed text-sm">
+          Run a real-time forensic check against the global AML database and
+          execute the smart-contract whitelist transaction.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Wallet Address Input */}
         <div className="space-y-2">
-          <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
-            Wallet Address
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            Wallet Identity
           </label>
-          <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
-              <Wallet size={18} />
-            </div>
+          <div className="relative">
+            <Wallet
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              size={18}
+            />
             <input
               type="text"
               placeholder="0x..."
-              className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all placeholder:text-slate-600"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm text-white outline-none focus:border-blue-500/50 focus:bg-slate-900/60 transition-all font-mono"
+              value={form.userAddress}
+              onChange={(e) =>
+                setForm({ ...form, userAddress: e.target.value })
+              }
               required
             />
           </div>
         </div>
 
-        {/* Legal Name Input */}
-        <div className="space-y-2">
-          <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
-            Legal Entity Name
-          </label>
-          <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
-              <User size={18} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+              Legal Full Name
+            </label>
+            <div className="relative">
+              <User
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                size={18}
+              />
+              <input
+                title="fullname"
+                type="text"
+                className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm text-white outline-none focus:border-blue-500/50 transition-all"
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                required
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Full Legal Name"
-              className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all placeholder:text-slate-600"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+              Email Interface
+            </label>
+            <div className="relative">
+              <Mail
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                size={18}
+              />
+              <input
+                title="email"
+                type="email"
+                className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm text-white outline-none focus:border-blue-500/50 transition-all"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </div>
           </div>
         </div>
 
-        {/* Jurisdiction Select */}
         <div className="space-y-2">
-          <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
-            Jurisdiction
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            Jurisdiction / Origin
           </label>
-          <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
-              <Globe size={18} />
-            </div>
+          <div className="relative">
+            <Globe
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              size={18}
+            />
             <select
-              title="form"
-              className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all appearance-none cursor-pointer"
+              title="country"
+              className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-4 pl-12 pr-10 text-sm text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
               value={form.country}
               onChange={(e) => setForm({ ...form, country: e.target.value })}
               required
             >
-              <option value="" disabled className="bg-slate-900">
+              <option value="" className="bg-slate-950">
                 Select Country
               </option>
-              <option value="USA" className="bg-slate-900">
-                United States
-              </option>
-              <option value="UK" className="bg-slate-900">
-                United Kingdom
-              </option>
-              <option value="EU" className="bg-slate-900">
-                European Union
-              </option>
-              <option value="Nigeria" className="bg-slate-900">
-                Nigeria
-              </option>
-              <option value="OTHER" className="bg-slate-900">
-                Other (High Risk)
-              </option>
+              {/* 5. Dynamically Render Sanctioned Countries from your DB */}
+              <optgroup
+                label="Restricted Jurisdictions"
+                className="bg-slate-950 text-rose-500"
+              >
+                {sanctionedCountries.map((s: any) => (
+                  <option key={s._id} value={s.country}>
+                    {s.country} ({s.restriction})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup
+                label="Standard Jurisdictions"
+                className="bg-slate-950 text-slate-400"
+              >
+                <option value="USA">United States</option>
+                <option value="UK">United Kingdom</option>
+                <option value="Nigeria">Nigeria</option>
+              </optgroup>
             </select>
           </div>
         </div>
 
-        {/* Feedback Messages */}
-        {status === "error" && (
-          <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-sm">
-            <AlertCircle size={18} />
-            {message}
+        {/* 6. Integrated Error Handling */}
+        {onboardMutation.isError && (
+          <div className="flex items-start gap-3 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-rose-400 animate-in slide-in-from-top-2">
+            <AlertCircle size={18} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-black uppercase text-[10px] mb-1 tracking-widest">
+                Protocol Blocked
+              </p>
+              <p className="text-xs">{message}</p>
+            </div>
           </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
-          disabled={status === "submitting"}
-          className="w-full group relative flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-blue-600/10 overflow-hidden"
+          disabled={onboardMutation.isPending}
+          className="w-full group relative flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-xl shadow-blue-600/20"
         >
-          {status === "submitting" ? (
+          {onboardMutation.isPending ? (
             <>
-              <Loader2 className="animate-spin" size={18} />
-              Verifying Sanctions...
+              <Loader2 className="animate-spin" size={18} /> Verifying Forensic
+              Hash...
             </>
           ) : (
             <>
-              <UserPlus size={18} />
-              Initialize Onboarding
+              <UserPlus size={18} /> Initialize Whitelist
             </>
           )}
         </button>
 
-        <p className="text-center text-[10px] text-slate-600 uppercase tracking-tighter">
-          By submitting, you trigger a real-time audit event logged to the
-          Sentinel immutable ledger.
+        <p className="text-center text-[9px] text-slate-600 uppercase font-bold tracking-tight">
+          Audit-logs will be generated for all successful and rejected attempts.
         </p>
       </form>
     </div>

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-31T13:18:01.997Z",
+  "event": "USER_ONBOARDING_APPROVED",
+  "level": "INFO",
+  "sender": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "userAddress": "0x843CC1A4E3c6c5FA850E71b5Ecc3B2a28A61600c",
+    "country": "Nigeria",
+    "riskScore": 0
+  }
+}

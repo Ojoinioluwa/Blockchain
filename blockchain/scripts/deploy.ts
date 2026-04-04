@@ -9,7 +9,10 @@ async function main() {
     console.log(`AML Contract deployed to: ${await contract.getAddress()}`);
 }
 
+
 main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });
+
+

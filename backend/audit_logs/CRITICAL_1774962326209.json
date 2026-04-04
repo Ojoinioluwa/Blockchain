@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-03-31T13:05:26.209Z",
+  "event": "ONBOARDING_FAILURE",
+  "level": "CRITICAL",
+  "sender": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "userAddress": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+    "error": "Path \"address\" is not in schema, strict mode is `true`, and upsert is `true`."
+  }
+}

@@ -13,6 +13,7 @@ import {
   History,
   Info,
 } from "lucide-react";
+import { getAuditLogs } from "../services/amlService";
 
 // Configuration
 const API_BASE = "http://localhost:3001/api/aml";
@@ -51,16 +52,8 @@ const App: React.FC = () => {
     text: string;
   } | null>(null);
 
-  const fetchLogs = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/reports`);
-      const data = await response.json();
-      setLogs(data);
-    } catch (err: unknown) {
-      console.log(err);
-      console.error("Failed to fetch logs");
-    }
-  };
+  // auditLogs
+  const fetchLogs = getAuditLogs();
 
   useEffect(() => {
     fetchLogs();
@@ -308,6 +301,7 @@ const App: React.FC = () => {
                         Jurisdiction
                       </label>
                       <select
+                        title="country"
                         className="w-full bg-[#0f172a] border border-slate-700 rounded-xl p-3 text-sm focus:border-blue-500 outline-none text-white cursor-pointer"
                         value={regData.country}
                         onChange={(e) =>
