@@ -34,9 +34,9 @@ const TransferPage = () => {
   // 2. Security Logic: Blacklist Lookup
   const blacklistedAddresses = useMemo(() => {
     return new Set(
-      blacklistData?.data?.map((b: { address: string }) =>
-        b.address.toLowerCase(),
-      ) || [],
+      blacklistData?.data
+        ?.filter((b: { address?: string }) => b?.address) // 1. Filter out items without an address
+        .map((b: { address: string }) => b.address.toLowerCase()) || [], // 2. Now safe to lowercase
     );
   }, [blacklistData]);
 
