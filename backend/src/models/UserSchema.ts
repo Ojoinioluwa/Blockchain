@@ -49,7 +49,7 @@ const UserSchema = new mongoose.Schema({
     },
     fullName: { type: String, required: true },
     email: { type: String, required: true },
-    idNumber: { type: String, required: true },
+    // idNumber: { type: String },
     isWhitelisted: { type: Boolean },
     kycStatus: {
         type: String,
@@ -60,8 +60,6 @@ const UserSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     lastActive: { type: Date, default: Date.now }
 });
-
-
 
 
 

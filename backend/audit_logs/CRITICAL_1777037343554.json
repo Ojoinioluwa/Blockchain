@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-24T13:29:03.554Z",
+  "event": "ONBOARDING_FAILURE",
+  "level": "CRITICAL",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "userAddress": "0x3ccCB69D0f3317847Ada0AE42a36B3414FDB3d9a",
+    "error": "User validation failed: idNumber: Path `idNumber` is required."
+  }
+}

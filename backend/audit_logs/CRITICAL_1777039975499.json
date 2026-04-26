@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-24T14:12:55.499Z",
+  "event": "TRANSFER_FAILURE",
+  "level": "CRITICAL",
+  "sender": "SYSTEM",
+  "receiver": "userExist",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "toAddress": "userExist",
+    "error": "unconfigured name (value=\"userExist\", code=UNCONFIGURED_NAME, version=6.16.0)"
+  }
+}

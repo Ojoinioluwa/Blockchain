@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-04-24T14:08:37.184Z",
+  "event": "BLACKLIST_REMOVAL",
+  "level": "INFO",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "walletAddress": "0xb11edc7109df7fe736bb3b6d3dddab7f1aa415fa",
+    "removedBy": "Admin",
+    "previousReason": "High-Risk Mixer",
+    "txHash": "0xead8672cb6de94b3d68a224a0d08909434e4d42c479a387022f2d27509af67fc"
+  }
+}

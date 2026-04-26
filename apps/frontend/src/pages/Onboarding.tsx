@@ -35,34 +35,31 @@ const Onboarding = () => {
   const { data: sanctionsData } = useSanctions();
   const sanctionedCountries = sanctionsData?.data || [];
 
+  // console.log(error);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStatus("idle"); // Reset status on new attempt
     setMessage("");
 
-    // 4. Execute mutation
     onboardMutation.mutate(form, {
       onSuccess: (data) => {
-        // Handle the logic based on your AML Controller responses
         if (data.status === "SUCCESS") {
           setStatus("success");
           setTxHash(data.txHash);
-          setMessage(
-            "Entity successfully whitelisted on-chain and registered in Sentinel DB.",
-          );
-        } else if (data.riskScore >= 70) {
-          setStatus("pending");
-          setMessage(
-            `High Risk Detected (${data.riskScore}). Reasons: ${data.reasons?.join(", ")}`,
-          );
+          setMessage("Entity successfully whitelisted on-chain.");
+        } else if (data.status === "REJECTED") {
+          setStatus("error");
+          setMessage(`High Risk Detected ${data.reason}`);
         }
       },
       onError: (error: any) => {
+        console.log(error);
         setStatus("error");
-        // Pull the error message from the backend (e.g., "Address is Blacklisted")
-        setMessage(
-          error.response?.data?.message ||
-            "Onboarding rejected by security protocol.",
-        );
+        // Extracting the 'reason' sent from your 403/451 backend responses
+        const backendError =
+          error.response?.data?.reason || error.response?.data?.message;
+        setMessage(backendError || "Onboarding rejected by security protocol.");
       },
     });
   };
@@ -104,6 +101,30 @@ const Onboarding = () => {
           className="px-10 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all border border-white/10"
         >
           Initialize New Session
+        </button>
+      </div>
+    );
+  }
+
+  // Error / Rejected State View
+  if (status === "error") {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 text-center px-6">
+        <div className="bg-rose-500/10 p-6 rounded-full mb-6 border border-rose-500/20 shadow-[0_0_30px_rgba(244,63,94,0.1)]">
+          <AlertCircle size={64} className="text-rose-400" />
+        </div>
+        <h2 className="text-3xl font-black text-white mb-2 tracking-tight uppercase">
+          Registration Rejected
+        </h2>
+        <p className="text-slate-400 max-w-md mb-8 leading-relaxed">
+          {message}
+        </p>
+
+        <button
+          onClick={() => setStatus("idle")}
+          className="px-10 py-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl font-black text-xs uppercase tracking-widest transition-all border border-rose-500/20"
+        >
+          Return to Onboarding
         </button>
       </div>
     );

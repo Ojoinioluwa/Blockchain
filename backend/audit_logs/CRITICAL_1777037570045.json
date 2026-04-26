@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-24T13:32:50.045Z",
+  "event": "ONBOARDING_FAILURE",
+  "level": "CRITICAL",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "userAddress": "0x0f8314d13f169d6daE072BFD940789b670DD38f2",
+    "error": "bad address checksum (argument=\"address\", value=\"0x0f8314d13f169d6daE072BFD940789b670DD38f2\", code=INVALID_ARGUMENT, version=6.16.0)"
+  }
+}

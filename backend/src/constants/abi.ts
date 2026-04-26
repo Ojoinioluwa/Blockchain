@@ -10,11 +10,17 @@ export const AML_ABI = [
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "suspiciousAddress",
+                "name": "user",
                 "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "status",
+                "type": "bool"
             }
         ],
-        "name": "AddressFlagged",
+        "name": "ComplianceUpdated",
         "type": "event"
     },
     {
@@ -41,6 +47,19 @@ export const AML_ABI = [
         ],
         "name": "TransferVerified",
         "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "DAILY_LIMIT",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [],
@@ -106,6 +125,25 @@ export const AML_ABI = [
                 "internalType": "bool",
                 "name": "",
                 "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "lastTransferTimestamp",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",

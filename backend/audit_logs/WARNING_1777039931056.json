@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-24T14:12:11.056Z",
+  "event": "REGISTRATION_REJECTED",
+  "level": "WARNING",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": "User Already Registered",
+  "metadata": {
+    "userAddress": "0xb11edc7109df7fe736bb3b6d3dddab7f1aa415fa",
+    "reason": "User Already Registered"
+  }
+}

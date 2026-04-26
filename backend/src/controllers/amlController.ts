@@ -67,35 +67,55 @@ const logAuditTrail = async (event: string, data: any, level: "INFO" | "WARNING"
 export const registerUser = async (req: Request, res: Response) => {
     const { userAddress, fullName, country, email, idNumber } = req.body;
     console.log("Register triggered")
+    // let idNumber = Math.random()
+    console.log(userAddress, fullName, country, email, idNumber)
 
     try {
         const lowAddr = userAddress.toLowerCase();
+        console.log(lowAddr)
+        let countryName = country.toUpperCase()
+        console.log(country)
+        console.log(countryName)
 
         // A. DB Check: Is wallet blacklisted?
-        const blacklisted = await Blacklist.findOne({ address: lowAddr });
+        const userExist = await User.findOne({ walletAddress: lowAddr });
+        if (userExist) {
+            logAuditTrail("REGISTRATION_REJECTED", { userAddress, reason: `User Already Registered` }, "WARNING");
+            return res.status(200).json({
+                status: "REJECTED",
+                reason: "This wallet address has been registered in our Database procced to Transfer."
+            });
+        }
+
+        // A. DB Check: Is wallet blacklisted?
+
+        const blacklisted = await Blacklist.findOne({ walletAddress: lowAddr });
         if (blacklisted) {
             logAuditTrail("REGISTRATION_REJECTED", { userAddress, reason: `Blacklisted: ${blacklisted.reason}` }, "CRITICAL");
-            return res.status(403).json({
+            return res.status(200).json({
                 status: "REJECTED",
                 reason: "This wallet address is flagged in our global blacklist database."
             });
         }
 
+        // console.log(blacklisted)
         // B. DB Check: Is country sanctioned?
-        const sanctioned = await Sanction.findOne({ countryName: country });
-        if (sanctioned && sanctioned.riskLevel === "CRITICAL") {
+        const sanctioned = await Sanction.findOne({ country: countryName });
+        console.log(sanctioned)
+        if (sanctioned) {
             logAuditTrail("SANCTIONS_BLOCK", { fullName, country, userAddress, reason: "Prohibited jurisdiction" }, "CRITICAL");
-            return res.status(403).json({
+            return res.status(200).json({
                 status: "REJECTED",
                 reason: `Registration from ${country} is prohibited under international sanctions.`
             });
         }
+        console.log("after")
 
         let riskScore = 0;
         let reasons: string[] = [];
 
         // C. Jurisdictional Risk (DB High Risk, but not Critical)
-        if (sanctioned && sanctioned.riskLevel === "HIGH") {
+        if (sanctioned) {
             riskScore += 40;
             reasons.push(`${country} is flagged as a high-risk jurisdiction.`);
         }
@@ -106,9 +126,11 @@ export const registerUser = async (req: Request, res: Response) => {
             return res.status(422).json({ status: "PENDING_REVIEW", riskScore, reasons });
         }
 
+        console.log("here")
         // Finalize Whitelist on Chain
         const tx = await amlContract.updateComplianceStatus!(userAddress, true);
         await tx.wait();
+        console.log(";after her")
 
         // E. PERSIST USER TO DATABASE
         await User.create(
@@ -118,12 +140,12 @@ export const registerUser = async (req: Request, res: Response) => {
                 // country,
                 riskScore,
                 email,
-                idNumber,
                 isWhitelisted: true,
                 createdAt: new Date()
             },
 
         );
+
 
         logAuditTrail("USER_ONBOARDING_APPROVED", { userAddress, country, riskScore }, "INFO");
 
@@ -470,7 +492,7 @@ export const addSanctionedCountry = async (req: Request, res: Response) => {
         console.log("got here")
 
         const newSanction = await Sanction.create({
-            country,
+            country: country.toUpperCase(),
             restriction,
             riskLevel: riskLevel || (restriction === 'TOTAL_BLOCK' ? 'CRITICAL' : 'WARNING'),
             // addedAt: new Date()

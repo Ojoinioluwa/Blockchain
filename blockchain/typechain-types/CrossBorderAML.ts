@@ -6,28 +6,32 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 
   export interface CrossBorderAMLInterface extends Interface {
-    getFunction(nameOrSignature: "bankAdmin" | "dailyVolume" | "initiateTransfer" | "isWhitelisted" | "updateComplianceStatus"): FunctionFragment;
+    getFunction(nameOrSignature: "DAILY_LIMIT" | "bankAdmin" | "dailyVolume" | "initiateTransfer" | "isWhitelisted" | "lastTransferTimestamp" | "updateComplianceStatus"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "AddressFlagged" | "TransferVerified"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "ComplianceUpdated" | "TransferVerified"): EventFragment;
 
-    encodeFunctionData(functionFragment: 'bankAdmin', values?: undefined): string;
+    encodeFunctionData(functionFragment: 'DAILY_LIMIT', values?: undefined): string;
+encodeFunctionData(functionFragment: 'bankAdmin', values?: undefined): string;
 encodeFunctionData(functionFragment: 'dailyVolume', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'initiateTransfer', values: [AddressLike, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'isWhitelisted', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'lastTransferTimestamp', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'updateComplianceStatus', values: [AddressLike, boolean]): string;
 
-    decodeFunctionResult(functionFragment: 'bankAdmin', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'DAILY_LIMIT', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'bankAdmin', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'dailyVolume', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'initiateTransfer', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'isWhitelisted', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'lastTransferTimestamp', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'updateComplianceStatus', data: BytesLike): Result;
   }
 
   
-    export namespace AddressFlaggedEvent {
-      export type InputTuple = [suspiciousAddress: AddressLike];
-      export type OutputTuple = [suspiciousAddress: string];
-      export interface OutputObject {suspiciousAddress: string };
+    export namespace ComplianceUpdatedEvent {
+      export type InputTuple = [user: AddressLike, status: boolean];
+      export type OutputTuple = [user: string, status: boolean];
+      export interface OutputObject {user: string, status: boolean };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -82,6 +86,14 @@ decodeFunctionResult(functionFragment: 'updateComplianceStatus', data: BytesLike
 
     
     
+    DAILY_LIMIT: TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >
+    
+
+    
     bankAdmin: TypedContractMethod<
       [],
       [string],
@@ -114,6 +126,14 @@ decodeFunctionResult(functionFragment: 'updateComplianceStatus', data: BytesLike
     
 
     
+    lastTransferTimestamp: TypedContractMethod<
+      [arg0: AddressLike, ],
+      [bigint],
+      'view'
+    >
+    
+
+    
     updateComplianceStatus: TypedContractMethod<
       [_user: AddressLike, _status: boolean, ],
       [void],
@@ -124,7 +144,12 @@ decodeFunctionResult(functionFragment: 'updateComplianceStatus', data: BytesLike
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'bankAdmin'): TypedContractMethod<
+    getFunction(nameOrSignature: 'DAILY_LIMIT'): TypedContractMethod<
+      [],
+      [bigint],
+      'view'
+    >;
+getFunction(nameOrSignature: 'bankAdmin'): TypedContractMethod<
       [],
       [string],
       'view'
@@ -144,19 +169,24 @@ getFunction(nameOrSignature: 'isWhitelisted'): TypedContractMethod<
       [boolean],
       'view'
     >;
+getFunction(nameOrSignature: 'lastTransferTimestamp'): TypedContractMethod<
+      [arg0: AddressLike, ],
+      [bigint],
+      'view'
+    >;
 getFunction(nameOrSignature: 'updateComplianceStatus'): TypedContractMethod<
       [_user: AddressLike, _status: boolean, ],
       [void],
       'nonpayable'
     >;
 
-    getEvent(key: 'AddressFlagged'): TypedContractEvent<AddressFlaggedEvent.InputTuple, AddressFlaggedEvent.OutputTuple, AddressFlaggedEvent.OutputObject>;
+    getEvent(key: 'ComplianceUpdated'): TypedContractEvent<ComplianceUpdatedEvent.InputTuple, ComplianceUpdatedEvent.OutputTuple, ComplianceUpdatedEvent.OutputObject>;
 getEvent(key: 'TransferVerified'): TypedContractEvent<TransferVerifiedEvent.InputTuple, TransferVerifiedEvent.OutputTuple, TransferVerifiedEvent.OutputObject>;
 
     filters: {
       
-      'AddressFlagged(address)': TypedContractEvent<AddressFlaggedEvent.InputTuple, AddressFlaggedEvent.OutputTuple, AddressFlaggedEvent.OutputObject>;
-      AddressFlagged: TypedContractEvent<AddressFlaggedEvent.InputTuple, AddressFlaggedEvent.OutputTuple, AddressFlaggedEvent.OutputObject>;
+      'ComplianceUpdated(address,bool)': TypedContractEvent<ComplianceUpdatedEvent.InputTuple, ComplianceUpdatedEvent.OutputTuple, ComplianceUpdatedEvent.OutputObject>;
+      ComplianceUpdated: TypedContractEvent<ComplianceUpdatedEvent.InputTuple, ComplianceUpdatedEvent.OutputTuple, ComplianceUpdatedEvent.OutputObject>;
     
 
       'TransferVerified(address,address,uint256)': TypedContractEvent<TransferVerifiedEvent.InputTuple, TransferVerifiedEvent.OutputTuple, TransferVerifiedEvent.OutputObject>;

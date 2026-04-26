@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-6ebbf143d396060012b9d743611a01e1988fd8a0",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.4.1"
+  },
+  "userSourceNameMap": {
+    "contracts/CrossBorderAML.sol": "project/contracts/CrossBorderAML.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/CrossBorderAML.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\ncontract CrossBorderAML {\r\n    address public bankAdmin;\r\n    uint256 public constant DAILY_LIMIT = 10000 * 10**18;\r\n\r\n    mapping(address => bool) public isWhitelisted;\r\n    mapping(address => uint256) public dailyVolume;\r\n    mapping(address => uint256) public lastTransferTimestamp; // Track the time\r\n\r\n    event TransferVerified(address indexed from, address indexed to, uint256 amount);\r\n    event ComplianceUpdated(address indexed user, bool status);\r\n\r\n    constructor() {\r\n        bankAdmin = msg.sender;\r\n    }\r\n\r\n    modifier onlyBank() {\r\n        require(msg.sender == bankAdmin, \"Not authorized\");\r\n        _;\r\n    }\r\n\r\n    function updateComplianceStatus(address _user, bool _status) external onlyBank {\r\n        isWhitelisted[_user] = _status;\r\n        emit ComplianceUpdated(_user, _status);\r\n    }\r\n\r\n    function initiateTransfer(address _to, uint256 _amount) external {\r\n        require(isWhitelisted[msg.sender], \"Sender failed AML check\");\r\n        require(isWhitelisted[_to], \"Recipient failed AML check\");\r\n\r\n        // Logic: If 24 hours have passed since the last transfer, reset the volume\r\n        if (block.timestamp >= lastTransferTimestamp[msg.sender] + 1 days) {\r\n            dailyVolume[msg.sender] = 0;\r\n        }\r\n\r\n        require(dailyVolume[msg.sender] + _amount <= DAILY_LIMIT, \"Daily limit exceeded\");\r\n\r\n        dailyVolume[msg.sender] += _amount;\r\n        lastTransferTimestamp[msg.sender] = block.timestamp; // Update time\r\n        \r\n        emit TransferVerified(msg.sender, _to, _amount);\r\n    }\r\n}"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-24T14:08:10.809Z",
+  "event": "REGISTRATION_REJECTED",
+  "level": "CRITICAL",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": "Blacklisted: High-Risk Mixer",
+  "metadata": {
+    "userAddress": "0xb11edc7109df7fe736bb3b6d3dddab7f1aa415fa",
+    "reason": "Blacklisted: High-Risk Mixer"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-24T13:36:01.411Z",
+  "event": "ONBOARDING_FAILURE",
+  "level": "CRITICAL",
+  "sender": "SYSTEM",
+  "receiver": "NETWORK",
+  "amount": "0.00",
+  "reason": null,
+  "metadata": {
+    "userAddress": "0x0f8314d13f169d6daE072BFD940788b670DD38f2",
+    "error": "E11000 duplicate key error collection: sentinel_aml.users index: walletAddress_1 dup key: { walletAddress: \"0x0f8314d13f169d6dae072bfd940788b670dd38f2\" }"
+  }
+}

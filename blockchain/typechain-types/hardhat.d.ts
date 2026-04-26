@@ -11,15 +11,19 @@ import * as Contracts from "./index.js";
 declare module "@nomicfoundation/hardhat-ethers/types" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
   getContractFactory(name: 'Counter', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.Counter__factory>
+getContractFactory(name: 'CounterTest', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.CounterTest__factory>
 getContractFactory(name: 'CrossBorderAML', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.CrossBorderAML__factory>
 
   getContractAt(name: 'Counter', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.Counter>
+getContractAt(name: 'CounterTest', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.CounterTest>
 getContractAt(name: 'CrossBorderAML', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.CrossBorderAML>
 
   deployContract(name: 'Counter', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Counter>
+deployContract(name: 'CounterTest', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.CounterTest>
 deployContract(name: 'CrossBorderAML', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.CrossBorderAML>
 
   deployContract(name: 'Counter', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Counter>
+deployContract(name: 'CounterTest', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.CounterTest>
 deployContract(name: 'CrossBorderAML', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.CrossBorderAML>
 
     // default types
