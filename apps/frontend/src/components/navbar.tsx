@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   UserPlus,
   Send,
-  History,
   ShieldCheck,
   Bell,
   Search,
